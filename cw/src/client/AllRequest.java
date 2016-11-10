@@ -1,3 +1,5 @@
+package client;
+
 import java.io.FileInputStream;
 
 public abstract class AllRequest {
