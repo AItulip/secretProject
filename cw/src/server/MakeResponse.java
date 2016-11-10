@@ -1,4 +1,6 @@
 
+package server;
+
 import java.util.HashMap;
 
 public class MakeResponse extends AllResponse{

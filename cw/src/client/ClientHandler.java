@@ -1,3 +1,5 @@
+package client;
+
 import java.util.HashMap;
 
 public class ClientHandler {
