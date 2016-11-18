@@ -1,5 +1,6 @@
 package server;
 
+import model.*;
 import java.io.FileInputStream;
 import java.util.HashMap;
 
