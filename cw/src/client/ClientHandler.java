@@ -2,8 +2,13 @@ package client;
 
 import java.util.HashMap;
 
+import javax.swing.JTextArea;
+
+import model.*;
+
 public class ClientHandler {
 	private MakeRequest resuqestemaker = new MakeRequest();
+	private JTextArea ta;
 	
 	
 	public  HashMap<String, String> getinformation(Datagram data){
@@ -20,7 +25,10 @@ public class ClientHandler {
 		
 	}
 	
-	
+	public ClientHandler(JTextArea ta) {
+		// TODO Auto-generated constructor stub
+		this.ta = ta;
+	}
 	
 	
 	public Datagram process(Datagram data){
@@ -28,7 +36,7 @@ public class ClientHandler {
 		
 		switch (getname(data)){
 		case "replylogin":  out = handlelogin(data); break;
-		case "replyregister": ;break;
+		case "replyregister": out = handleregister(data);break;
 		case "replygetallfriend": ;
 		case "replyaddfriend": ;
 		case "replyremovefriend": ;
@@ -38,7 +46,7 @@ public class ClientHandler {
 		case "replygetallgroup": ;
 		case "replysendfriendmessagep": ;	
 		case "replysendgroupmessage": ;
-		case "friendmessagerelay": ;
+		case "friendmessagerelay": out = handleReceiveFriendMessage(data);break;
 		case "groupmessagerelay": ;
 		case "friendfilerelay":;
 		
@@ -57,17 +65,29 @@ public class ClientHandler {
 	
 	public  Datagram handlelogin(Datagram indata){
 //		System.out.println(indata.getdatagram().size());
-		System.out.println(getdata(indata).get("result"));
+		System.out.println(getdata(indata).get("result")+ "\n");
 
 //	just show information and reply nothing
 		return null;
 	}
 	
 	
-	public  Datagram handleregister(Datagram data){
+	public  Datagram handleregister(Datagram indata){
 
-		return null;
+		System.out.println(getdata(indata).get("result")+"\n");
 		
+		return null;
+	}
+	
+	public Datagram handleReceiveFriendMessage(Datagram indata) {
+		
+		System.out.println("revice");
+		
+		ta.append(getdata(indata).get("rname")+"   "+ getdata(indata).get("rtime") + "\n" );
+		ta.append(getdata(indata).get("msg")+"\n");
+		
+		
+		return null;
 	}
 	
 

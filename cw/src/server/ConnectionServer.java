@@ -1,49 +1,69 @@
 package server;
 
+import model.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
+import java.util.Vector;
+
+
 public class ConnectionServer {
 	private  Socket socket = null;
 	private  ObjectInputStream objectInput = null; 
 	private  ObjectOutputStream objectOutput = null;
 	private  ServerSocket myServerSocket = null;
+	private  RunServer server = null;
 	
 	
-	public ConnectionServer(int port){
-		setSocket( port);
-		oepnobjectio();
+	Vector<ClientSocket> onlineUsers = new Vector<ClientSocket>();
+	
+	public ConnectionServer(int port,RunServer server){
 		
+		this.server = server;
+		
+		setSocket( port);
+		
+		
+//		openobjectio();
 	}
+	
+	public void setSocket( int port){
+		try {
+			myServerSocket = new ServerSocket(port);
+			
+			while (true){
+				
+				socket = myServerSocket.accept();
+				server.setText("Server:find new connection");
+				showConnectivity(socket);
+				 
+				new ClientSocket(socket, onlineUsers, server);
+			}
+			
+		}catch (IOException ex){
+			ex.printStackTrace();
+		}
+	}
+	
 	
 	public void close(){
 		closeobjectio();
 		closesocket();
-	
 	}
 	
 	
-	public boolean setSocket( int port){
-		try {
-			myServerSocket = new ServerSocket(port);
-			socket = myServerSocket.accept();
-			System.out.println("Server:find connection");
-			return true;
-		}catch (IOException ex){
-			return false;
-		}
-	}
+	
 	
 	public  void showConnectivity(Socket socket){
 		if (socket!=null){
-			System.out.println("local ip:" + socket.getLocalAddress());
-			System.out.println("local port:" + socket.getLocalPort());
-			System.out.println("server ip:" + socket.getInetAddress());
-			System.out.println("server port:" + socket.getPort());
+			server.setText("local ip:" + socket.getLocalAddress());
+			server.setText("local port:" + socket.getLocalPort());
+			server.setText("server ip:" + socket.getInetAddress());
+			server.setText("server port:" + socket.getPort());
 		}
 		else{
-			System.out.println("error");
+			server.setText("error");
 		}
 	}	
 	public  Socket getsocket(){
@@ -66,17 +86,19 @@ public class ConnectionServer {
 	public  Datagram receivedatagram (){
 		Datagram tmp = null;
 		try {
-
 			try {
-                Object object =(Datagram) objectInput.readObject();
-                tmp = (Datagram) object;           
-
+				
+				while ((tmp = (Datagram)objectInput.readObject()) != null) {
+					Object object =(Datagram) objectInput.readObject();
+	                tmp = (Datagram) object;
+				}
+				
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
 		} catch (IOException e) {
 			
-			System.out.println("Receive Failure");
+			server.setText("Receive Failure");
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			
@@ -89,7 +111,7 @@ public class ConnectionServer {
 		try {
 			socket.close();
 		} catch (IOException e) {
-			System.out.println("Closesocket Failure");
+			server.setText("Closesocket Failure");
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -99,24 +121,24 @@ public class ConnectionServer {
 			try {
 				objectInput.close();;
 			} catch (IOException e) {
-				System.out.println("objectInput Failure");
+				server.setText("objectInput Failure");
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
 				objectOutput.close();
 			} catch (IOException e) {
-				System.out.println("objectOutput Failure");
+				server.setText("objectOutput Failure");
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}else{
-			System.out.println("Pleas open socket first");
+			server.setText("Pleas open socket first");
 		}
 		
 		
 	}
-	public  boolean oepnobjectio(){
+	public  boolean openobjectio(){
 		boolean res = false;
 		if(socket != null){
 			
@@ -124,7 +146,7 @@ public class ConnectionServer {
 				objectOutput = new ObjectOutputStream(socket.getOutputStream());
 				
 			} catch (IOException e) {
-				System.out.println("cannot open ObjectOutputStream");
+				server.setText("cannot open ObjectOutputStream");
 				e.printStackTrace();
 			}
 			
@@ -132,12 +154,12 @@ public class ConnectionServer {
 			try {
 				objectInput = new ObjectInputStream(socket.getInputStream());
 			} catch (IOException e) {
-				System.out.println("cannot open ObjectInputStream");
+				server.setText("cannot open ObjectInputStream");
 				//e.printStackTrace();
 			}
 			res = true;
 		}else{
-			System.out.println("Pleas open socket first");
+			server.setText("Pleas open socket first");
 		}
 		return res;
 	}
