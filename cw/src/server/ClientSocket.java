@@ -7,6 +7,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Vector;
 
+import com.mysql.fabric.xmlrpc.base.Data;
+
 
 public class ClientSocket extends Thread{
 	private Vector<ClientSocket> onlineUsers ;
@@ -21,6 +23,7 @@ public class ClientSocket extends Thread{
 
 
 	String name = null;
+	String nickname = null;
 	int port;
 
 	public ClientSocket(Socket socket,Vector<ClientSocket> onlineUsers,RunServer server) {
@@ -52,8 +55,9 @@ public class ClientSocket extends Thread{
 		try {
 			try {
 
-				while ((tmp = (Datagram)objectInput.readObject()) != null) {               
-					senddatagram(sh.process(tmp));
+				while ((tmp = (Datagram)objectInput.readObject()) != null) {
+					Datagram data; 
+					if((data=sh.process(tmp)) != null) senddatagram(data);	
 				}
 
 			} catch (ClassNotFoundException e) {

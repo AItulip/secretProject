@@ -40,7 +40,7 @@ public class Database {
 			String res;
 			
 			if (rs.next()){
-				res = "already register";
+				res = "the name has been used";
 			}else{
 				PreparedStatement ps2 = conn.prepareStatement("insert into user (username,password) values(?,?)");
 				ps2.setString(1, username);
@@ -48,9 +48,9 @@ public class Database {
 				int count = ps2.executeUpdate();
 				
 				if (count>0) {
-					res = "success";
+					res = "successful";
 				}else{
-					res = "failure";
+					res = "invalid name";
 				}
 				ps2.close();
 			}
@@ -71,7 +71,10 @@ public class Database {
 		return "";
 	}
 	
-	public String login(String username, String password) {
+	public String[] login(String username, String password) {
+		
+		String[] res = {"",null};
+		
 		try {
 			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
 			System.out.println("connect to dababase");
@@ -80,17 +83,53 @@ public class Database {
 			ps.setString(1, username);
 			ResultSet rs = ps.executeQuery();
 			
-			String res;
+			
 			
 			if (rs.next()){
 				
 				if (rs.getString(3).equals(password)){
-					res = "login success";
+					res[0] = "successful";
+					res[1] = rs.getString(4); 
 				}else{
-					res = "wrong password";
+					res[0] = "wrong password";
 				}
 			}else{
-				res = "haven't register";
+				res[0] = "not exist";
+			}
+			
+			rs.close();
+			ps.close();
+			conn.close();
+			System.out.println("close to dababase");
+			
+			
+			System.out.println(res.toString());
+			
+			return res;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return res;
+	}
+	
+	public String editNickname(String username,String nickname) {
+		try {
+			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
+			System.out.println("connect to dababase");
+			
+			PreparedStatement ps = conn.prepareStatement("update user set nickname ="+nickname+"where username = ?");
+			ps.setString(1, username);
+			ResultSet rs = ps.executeQuery();
+			
+			String res;
+			
+			int count = ps.executeUpdate();
+			
+			if (count>0) {
+				res = "successful";
+			}else{
+				res = "invalid name";
 			}
 			
 			rs.close();
@@ -108,6 +147,8 @@ public class Database {
 		}
 		return "";
 	}
+	
+	
 
 	public ArrayList<String> allUsers() {
 		try {
