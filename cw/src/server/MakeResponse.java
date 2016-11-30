@@ -1,4 +1,7 @@
 
+package server;
+
+import model.*;
 import java.util.HashMap;
 
 public class MakeResponse extends AllResponse{
@@ -21,9 +24,16 @@ public class MakeResponse extends AllResponse{
 		data.put("result", mesg);
 
 		Datagram res = new Datagram("replyregister",data);
-		return res;
-			
-		
+		return res;	
+	}
+	
+
+	public Datagram editNickname(String mesg) {
+		HashMap<String, String> data = new HashMap<String, String>();
+		data.put("result", mesg);
+
+		Datagram res = new Datagram("replynewdisplayname",data);
+		return res;	
 	}
 
 	@Override

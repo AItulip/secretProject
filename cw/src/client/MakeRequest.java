@@ -1,3 +1,6 @@
+package client;
+
+import model.*;
 import java.io.FileInputStream;
 import java.util.HashMap;
 
