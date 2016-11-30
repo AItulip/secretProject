@@ -36,9 +36,9 @@ public class ServerHandler {
 		// TODO Auto-generated constructor stub
 		this.server = server;
 		this.socket = socket;
-	   
-	    date=new Date();
-        format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+		date=new Date();
+		format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	}
 
 
@@ -48,16 +48,10 @@ public class ServerHandler {
 		switch (getname(data)){
 		case "requestlogin":  out = handleLogin(data); break;
 		case "requestregister": out = handleRegister(data);break;
-		case "requestgetallfriend": out = handleRegister(data);break;
-		case "requestaddfriend":out = handleRegister(data);break;
-		case "requestremovefriend":out = handleRegister(data);break;
-		case "requestaddgroup": ;
-		case "requestremovgroup": ;	
-		case "requestgetgroupmember": ;	
-		case "requestgetallgroup": ;
+		case "requestgetgroupmember": ;	out = handleGetGroup(data);break;
 		case "requestsendfriendmessagep":out = handleSendFriendMessage(data);break;
-		case "requestsendgroupmessage":out = handleSendFriendMessage(data);break;
-
+		case "requestsendgroupmessage":out = handleSendGroupMessage(data);break;
+		case "requestnewdisplayname": ;
 		}
 		return out;				
 	}
@@ -71,13 +65,20 @@ public class ServerHandler {
 		//		System.out.println(indata.getdatagram().size());
 
 		HashMap<String, String> data = getdata(indata);
-		String re = Database.getInstance().login(data.get("username"), data.get("password"));
-		Datagram  out =  responsemaker.login(re);
+		String[] re = Database.getInstance().login(data.get("username"), data.get("password"));
+		Datagram  out =  responsemaker.login(re[0]);
 
-		if (re.equals("login success")){
-			
+		if (re.equals("successful")){
+
 			socket.name = data.get("username");
+			socket.nickname = re[1];
 			server.setText(socket.name+ "   login");
+
+			Datagram groupData = handleGetGroup(null);
+			for (ClientSocket socket : server.onlineUsers){
+				socket.senddatagram(groupData);
+			}
+			
 		}
 
 		// return the result
@@ -89,6 +90,18 @@ public class ServerHandler {
 
 		HashMap<String, String> data = getdata(indata);
 		Datagram  out =  responsemaker.register(Database.getInstance().register(data.get("username"), data.get("password")));
+
+
+
+		// return the result
+		return out;
+
+	}
+	public  Datagram handleEditNickname(Datagram indata){
+
+		HashMap<String, String> data = getdata(indata);
+		Datagram  out =  responsemaker.editNickname(Database.getInstance().editNickname(data.get("username"), data.get("nickname")));
+
 
 
 		// return the result
@@ -104,34 +117,81 @@ public class ServerHandler {
 
 		for (ClientSocket socket : server.onlineUsers){
 			if (socket.name.equals(data.get("dst"))){
-                out = responsemaker.sendfriendmessage("sucesss");
-                
-                
-                
-                HashMap<String, String> rdata = new HashMap<String, String>();
-                
-                rdata.put("rname", this.socket.name);
-                rdata.put("msg",data.get("mesg"));
-                rdata.put("rtime", format.format(date));
-                
-                Datagram send = responsemaker.friendmessagerelay(rdata);
-                socket.senddatagram(send);
-                
-                
-                 
+				out = responsemaker.sendfriendmessage("sucesss");
+
+
+
+				HashMap<String, String> rdata = new HashMap<String, String>();
+
+				rdata.put("rname", this.socket.name);
+				rdata.put("msg",data.get("mesg"));
+				rdata.put("rtime", format.format(date));
+
+				Datagram send = responsemaker.friendmessagerelay(rdata);
+				socket.senddatagram(send);
+
 				break;
 			}
-			
+
 		}
-		
+
 		if (out == null){
 			out = responsemaker.sendfriendmessage("fail for offline");
-	        server.setText(socket.name + "send message to "+ data.get("dst") + " fail for offline");
+			server.setText(socket.name + "send message to "+ data.get("dst") + " fail for offline");
 		}
-		
+
 		// return the result
 		return out;
 
 	}
+
+	public  Datagram handleSendGroupMessage(Datagram indata){
+
+		HashMap<String, String> data = getdata(indata);
+
+		Datagram  out = null;
+
+		for (ClientSocket socket : server.onlineUsers){
+			if ( socket.name != null &&  !socket.name.equals(this.socket.name)  )  {
+				out = responsemaker.sendfriendmessage("sucesss");            
+				HashMap<String, String> rdata = new HashMap<String, String>();
+
+				rdata.put("rname", this.socket.name);
+				rdata.put("msg",data.get("mesg"));
+				rdata.put("rtime", format.format(date));
+
+				Datagram send = responsemaker.friendmessagerelay(rdata);
+				socket.senddatagram(send);
+			}
+
+		}
+
+		//		if (out == null){
+		//			out = responsemaker.sendfriendmessage("fail for offline");
+		//	        server.setText(socket.name + "send message to "+ data.get("dst") + " fail for offline");
+		//		}
+
+		// return the result
+		return out;
+
+	}
+
+
+	public  Datagram handleGetGroup(Datagram indata){
+
+		//		HashMap<String, String> data = getdata(indata);
+		Datagram  out =  null;
+		HashMap<String, String> rdata = new HashMap<String, String>();
+
+		for (ClientSocket socket : server.onlineUsers){
+			if ( socket.name != null) rdata.put(socket.name,socket.nickname);
+		}
+		
+		out = responsemaker.getgroupmember(rdata);
+		// return the result
+		return out;
+
+	}
+
 
 }
