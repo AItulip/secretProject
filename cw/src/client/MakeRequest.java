@@ -1,10 +1,23 @@
-package client;
-
-import model.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class MakeRequest extends AllRequest {
+	private String src;
+	private String displayname;
+	
+	public MakeRequest(String name){
+		src = name;
+	}
+	
+	public void setdisplayname(String name){
+		displayname = name;
+	}
 	
 	@Override
 	public Datagram login(String username, String password) {
@@ -25,72 +38,11 @@ public class MakeRequest extends AllRequest {
 		return res;
 	}
 
-	@Override
-	public Datagram getallfriends() {
-		HashMap<String, String> data = new HashMap<String, String>();
-		Datagram res = new Datagram("requestgetallfriend",data);	
-
-		return res;
-	}
-
-	@Override
-	public Datagram addfriend(String friendname) {
-		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("friendname", friendname);
-		Datagram res = new Datagram("requestaddfriend",data);	
-
-
-		return res;
-		
-	}
-
-	@Override
-	public Datagram removefriend(String friendname) {
-		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("friendname", friendname);
-		Datagram res = new Datagram("requestremovefriend",data);	
-
-
-		return res;
-	}
-
-	@Override
-	public Datagram getallgroup() {
-		HashMap<String, String> data = new HashMap<String, String>();
-		Datagram res = new Datagram("requestgetallgroup",data);	
-
-
-		return res;
-	}
-
-	@Override
-	public Datagram addgroup(String groupname) {
-		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("groupname", groupname);
-		Datagram res = new Datagram("requestaddgroup",data);	
-
-
-		return res;
-	}
-
-	@Override
-	public Datagram removgroup(String groupname) {
-		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("groupname", groupname);
-		Datagram res = new Datagram("requestremovgroup",data);	
-
-
-		return res;
-	}
-	
 	
 	@Override	
-	public Datagram getgroupmember(String groupname){
-		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("groupname", groupname);
+	public Datagram getgroupmember(){
+		HashMap<String, String> data = new HashMap<String, String>();		
 		Datagram res = new Datagram("requestgetgroupmember",data);	
-
-
 		return res;
 		
 	}
@@ -102,16 +54,18 @@ public class MakeRequest extends AllRequest {
 		data.put("dst", dst);
 		data.put("mesg", mesg);
 		Datagram res = new Datagram("requestsendfriendmessagep",data);	
+		data.put("src", src);
 
 
 		return res;
 	}
 
 	@Override
-	public Datagram sendgroupmessage(String dst, String mesg) {
+	public Datagram sendgroupmessage(String mesg) {
 		HashMap<String, String> data = new HashMap<String, String>();
-		data.put("dst", dst);
 		data.put("mesg", mesg);
+		data.put("src", src);
+		data.put("displayname", displayname);
 		Datagram res = new Datagram("requestsendgroupmessage",data);	
 
 
@@ -122,16 +76,65 @@ public class MakeRequest extends AllRequest {
 
 
 	@Override
-	public Datagram sendfriendfile(String username, FileInputStream fin) {
-//		HashMap<String, String> data = new HashMap<String, String>();
-//		data.put("groupname", groupname);
-//		Datagram res = new Datagram("requestaddgroup",data);	
-//		ConnectionClient.senddatagram(res);
-//		Datagram dg = ConnectionClient.receivedatagram();
-//
-//		return dg;
+	public Datagram sendfriendfile(String dst, String filename) {
+		
+		
+		try {
+			FileInputStream fin = new FileInputStream(filename);
+			
+			BufferedInputStream buffin = new BufferedInputStream(fin);			
+			HashMap<String, String> data = new HashMap<String, String>();
+			DataInputStream datain = new DataInputStream(buffin);	
+			data.put("dst", dst);	
+			
+			Path p = Paths.get(filename);
+			String realfilename = p.getFileName().toString();
+			data.put("filename", realfilename);	
+			System.out.println("filelength"  + datain.available());
+			data.put("filelength", "" + datain.available());	
+			data.put("src", src);
+			byte[] tempbyte = new byte[2*datain.available()];
+			int i = 0;
+		
+			while (datain.available() > 0) {
+				byte t = datain.readByte();
+				tempbyte[2*i] = (byte) (t&15);
+				tempbyte[2*i + 1] = (byte) ((t&240)>>4);
+				i ++ ;
+			}
+			
+			
+			String content = new String(tempbyte,"US-ASCII");
+			System.out.println("stringlength"  + content.getBytes().length);
+			data.put("filecontent", content);	
+			
+			
+			datain.close();
+			buffin.close();
+			fin.close();
+			Datagram res = new Datagram("requestsendfriendfile",data);
+			
+			
+			return res;
+	
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
-
-
+	
+	@Override
+	public Datagram newdisplayname(String newname){
+		HashMap<String, String> data = new HashMap<String, String>();
+		data.put("newname", newname);
+		Datagram res = new Datagram("requestnewdisplayname",data);	
+		return res;
+		
+	}
+	
+	
 }

@@ -4,24 +4,37 @@ package db;
 import java.sql.*;
 import java.util.ArrayList;
 
+import com.mysql.fabric.xmlrpc.base.Data;
+
 public class Database {
 
-	private static Database single=null; 
+	private static Database single = new Database(); 
 
-	String url="jdbc:mysql://localhost:3306/cw"; 
+	String url="jdbc:h2:~/cw"; 
 	
 	public static Database getInstance() {  
-		if (single == null) {    
-			single = new Database();  
-		}    
-		return single;  
+		return single;
 	}  
 
 	private Database() {
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			System.out.println("MySQL run");
-		} catch (ClassNotFoundException e) {
+			Class.forName("org.h2.Driver");
+			System.out.println("h2 run");
+			
+			Connection conn = DriverManager.getConnection(url, "sa", "sa");
+			Statement st = conn.createStatement();
+			
+//			System.out.println(st.executeUpdate("drop table user"));
+			
+			String query = "create table IF NOT EXISTS user(id int not null auto_increment primary key,username varchar(255),password varchar(255),displayname varchar(255));";
+			int n = st.executeUpdate(query);
+			System.out.println(n);
+			
+			
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -30,7 +43,7 @@ public class Database {
 
 	public String register(String username, String password) {
 		try {
-			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
+			Connection conn = DriverManager.getConnection(url, "sa", "sa");
 			System.out.println("connect to dababase");
 			
 			PreparedStatement ps = conn.prepareStatement("select * from user where username = ?");
@@ -40,7 +53,7 @@ public class Database {
 			String res;
 			
 			if (rs.next()){
-				res = "the name has been used";
+				res = "username has been used";
 			}else{
 				PreparedStatement ps2 = conn.prepareStatement("insert into user (username,password) values(?,?)");
 				ps2.setString(1, username);
@@ -50,7 +63,7 @@ public class Database {
 				if (count>0) {
 					res = "successful";
 				}else{
-					res = "invalid name";
+					res = "operation fail";
 				}
 				ps2.close();
 			}
@@ -76,7 +89,7 @@ public class Database {
 		String[] res = {"",null};
 		
 		try {
-			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
+			Connection conn = DriverManager.getConnection(url, "sa", "sa");
 			System.out.println("connect to dababase");
 			
 			PreparedStatement ps = conn.prepareStatement("select * from user where username = ?");
@@ -91,10 +104,10 @@ public class Database {
 					res[0] = "successful";
 					res[1] = rs.getString(4); 
 				}else{
-					res[0] = "wrong password";
+					res[0] = "wrong Password";
 				}
 			}else{
-				res[0] = "not exist";
+				res[0] = "user does not exist";
 			}
 			
 			rs.close();
@@ -103,7 +116,7 @@ public class Database {
 			System.out.println("close to dababase");
 			
 			
-			System.out.println(res.toString());
+			System.out.println(res[1]);
 			
 			return res;
 		} catch (SQLException e) {
@@ -113,23 +126,31 @@ public class Database {
 		return res;
 	}
 	
-	public String editNickname(String username,String nickname) {
+	public String editDisplayname(String username,String displayName) {
 		try {
-			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
+			
+			Connection conn = DriverManager.getConnection(url, "sa", "sa");
 			System.out.println("connect to dababase");
 			
-			PreparedStatement ps = conn.prepareStatement("update user set nickname ="+nickname+"where username = ?");
-			ps.setString(1, username);
+			PreparedStatement ps = conn.prepareStatement("select * from user where displayname = ?");
+			ps.setString(1, displayName);
 			ResultSet rs = ps.executeQuery();
 			
 			String res;
 			
-			int count = ps.executeUpdate();
-			
-			if (count>0) {
-				res = "successful";
+			if (rs.next()){
+				res = "displayname has been used";
 			}else{
-				res = "invalid name";
+				PreparedStatement ps2 = conn.prepareStatement("update user set displayname = '"+displayName+"' where username = ?");
+				ps2.setString(1, username);
+				int count = ps2.executeUpdate();
+				
+				if (count>0) {
+					res = "successful";
+				}else{
+					res = "operation fail";
+				}
+				ps2.close();
 			}
 			
 			rs.close();
@@ -155,7 +176,7 @@ public class Database {
 			
 			ArrayList<String> res = new ArrayList<String>();
 			
-			Connection conn = DriverManager.getConnection(url, "root", "Wangsaiu1");
+			Connection conn = DriverManager.getConnection(url, "sa", "sa");
 			System.out.println("connect to dababase");
 			
 			PreparedStatement ps = conn.prepareStatement("select * from user");

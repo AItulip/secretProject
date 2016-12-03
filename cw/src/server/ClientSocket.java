@@ -40,7 +40,7 @@ public class ClientSocket extends Thread{
 			objectInput = new ObjectInputStream(socket.getInputStream());
 		} catch (IOException e) {
 			this.server.setText("client: "+port+" connect fail");
-			e.printStackTrace();
+//			e.printStackTrace();
 			return;
 		}
 
@@ -61,7 +61,7 @@ public class ClientSocket extends Thread{
 				}
 
 			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+				server.setText(name+"  "+e.getMessage());
 			}
 		} catch (IOException e) {
 			if (name != null){
@@ -79,7 +79,7 @@ public class ClientSocket extends Thread{
 			objectOutput.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			this.server.setText("client :  "+port+"sendData fail");
 		}
 	}
 }

@@ -51,7 +51,8 @@ public class ServerHandler {
 		case "requestgetgroupmember": ;	out = handleGetGroup(data);break;
 		case "requestsendfriendmessagep":out = handleSendFriendMessage(data);break;
 		case "requestsendgroupmessage":out = handleSendGroupMessage(data);break;
-		case "requestnewdisplayname": ;
+		case "requestnewdisplayname":out = handleEditNickname(data);break;
+		case "requestsendfriendfile":;
 		}
 		return out;				
 	}
@@ -78,7 +79,7 @@ public class ServerHandler {
 			for (ClientSocket socket : server.onlineUsers){
 				socket.senddatagram(groupData);
 			}
-			
+
 		}
 
 		// return the result
@@ -100,9 +101,7 @@ public class ServerHandler {
 	public  Datagram handleEditNickname(Datagram indata){
 
 		HashMap<String, String> data = getdata(indata);
-		Datagram  out =  responsemaker.editNickname(Database.getInstance().editNickname(data.get("username"), data.get("nickname")));
-
-
+		Datagram  out =  responsemaker.newdisplayname(Database.getInstance().editDisplayname(data.get("username"), data.get("nickname")));
 
 		// return the result
 		return out;
@@ -117,26 +116,21 @@ public class ServerHandler {
 
 		for (ClientSocket socket : server.onlineUsers){
 			if (socket.name.equals(data.get("dst"))){
-				out = responsemaker.sendfriendmessage("sucesss");
-
-
-
+				
 				HashMap<String, String> rdata = new HashMap<String, String>();
 
 				rdata.put("rname", this.socket.name);
 				rdata.put("msg",data.get("mesg"));
-				rdata.put("rtime", format.format(date));
+//				rdata.put("rtime", format.format(date));
 
-				Datagram send = responsemaker.friendmessagerelay(rdata);
-				socket.senddatagram(send);
-
+				out = responsemaker.friendmessagerelay(rdata);
 				break;
 			}
-
 		}
+		
 
 		if (out == null){
-			out = responsemaker.sendfriendmessage("fail for offline");
+//			out = responsemaker.sendfriendmessage("fail for offline");
 			server.setText(socket.name + "send message to "+ data.get("dst") + " fail for offline");
 		}
 
@@ -153,15 +147,16 @@ public class ServerHandler {
 
 		for (ClientSocket socket : server.onlineUsers){
 			if ( socket.name != null &&  !socket.name.equals(this.socket.name)  )  {
-				out = responsemaker.sendfriendmessage("sucesss");            
+//				out = responsemaker.sendfriendmessage("sucesss");            
 				HashMap<String, String> rdata = new HashMap<String, String>();
 
 				rdata.put("rname", this.socket.name);
 				rdata.put("msg",data.get("mesg"));
-				rdata.put("rtime", format.format(date));
+//				rdata.put("rtime", format.format(date));
 
-				Datagram send = responsemaker.friendmessagerelay(rdata);
-				socket.senddatagram(send);
+				out = responsemaker.friendmessagerelay(rdata);
+				
+//				socket.senddatagram(send);
 			}
 
 		}
@@ -186,7 +181,7 @@ public class ServerHandler {
 		for (ClientSocket socket : server.onlineUsers){
 			if ( socket.name != null) rdata.put(socket.name,socket.nickname);
 		}
-		
+
 		out = responsemaker.getgroupmember(rdata);
 		// return the result
 		return out;
